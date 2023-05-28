@@ -22,7 +22,6 @@ public class TurnBanner : MonoBehaviour
 
     private IEnumerator DisplayTurnBanner()
     {
-        Debug.Log("Banner logic running");
         if (TurnManager.Instance().EnemyTurn())
         {
             banner.gameObject.SetActive(true);

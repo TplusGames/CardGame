@@ -59,7 +59,7 @@ public class EnemyLogic : MonoBehaviour
                         cardToPlace.SetParent(slot);
                         cardToPlace.position = slot.position;
                         TurnManager.Instance().rowAndColumnManager.CalculateCardScore(slot, cardToPlace.GetComponent<CardPlacement>());
-                        DamageManager.instance.DealDamage(slot);
+                        StartCoroutine(DamageManager.instance.DealDamage(slot));
                         cards.Remove(cardToPlace);
                         break;
                     }
@@ -70,10 +70,11 @@ public class EnemyLogic : MonoBehaviour
                     cardToPlace.position = slot.position;
                     TurnManager.Instance().rowAndColumnManager.CalculateCardScore(slot, cardToPlace.GetComponent<CardPlacement>());
                     cards.Remove(cardToPlace);
+                    StartCoroutine(DamageManager.instance.DealDamage(slot));
                     break;
                 }
             }
         }
-        TurnManager.Instance().ChangeTurns();
+        
     }
 }

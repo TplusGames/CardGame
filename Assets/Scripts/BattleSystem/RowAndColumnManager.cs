@@ -130,8 +130,6 @@ public class RowAndColumnManager : MonoBehaviour
 
     public void CalculateColumnScore()
     {
-        
-
         for (int i = 0; i < columnLists.Count; i++)
         {
             int playerScoreToAdd = 0;
@@ -153,7 +151,6 @@ public class RowAndColumnManager : MonoBehaviour
                         else
                         {
                             enemyScoreToAdd += card.GetDamage();
-                            Debug.Log("Enemy has dealt " + card.GetDamage() + " damage");
                         }
                     }
                 }

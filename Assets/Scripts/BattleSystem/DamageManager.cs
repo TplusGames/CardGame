@@ -1,19 +1,32 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class DamageManager : MonoBehaviour
 {
     public static DamageManager instance;
+    [SerializeField] private List<Transform> retaliators = new List<Transform>();
+
+    [SerializeField] private TextMeshProUGUI damageOverlay;
 
     private void Awake()
     {
         instance = this;
     }
 
-    public void DealDamage(Transform Slot)
+    private void Start()
     {
+        damageOverlay.gameObject.SetActive(false);
+    }
+
+    public IEnumerator DealDamage(Transform Slot)
+    {
+        yield return new WaitForSeconds(3);
+
         List<Transform> neighbors = new List<Transform>();
+
+        retaliators.Clear();
 
         CardSlot slotLogic = Slot.GetComponent<CardSlot>();
 
@@ -34,41 +47,95 @@ public class DamageManager : MonoBehaviour
             neighbors.Add(slotLogic.rightNeighbor);
         }
 
-        foreach(Transform t in neighbors)
+        foreach(Transform neighbor in neighbors)
         {
             if (slotLogic.heldByPlayer)
             {
-                if (t.GetComponent<CardSlot>().GetDamage() > 0)
+                if (neighbor.GetComponent<CardSlot>().GetDamage() > 0)
                 {
-                    if (!t.GetComponent<CardSlot>().heldByPlayer)
+                    if (!neighbor.GetComponent<CardSlot>().heldByPlayer && neighbor.childCount > 0)
                     {
-                        if (slotLogic.GetDamage() > t.GetComponent<CardSlot>().GetDamage())
+                        damageOverlay.gameObject.SetActive(true);
+                        damageOverlay.text = "-" + (slotLogic.GetDamage()).ToString();
+                        damageOverlay.transform.position = neighbor.transform.position;
+
+                        if (slotLogic.GetDamage() >= neighbor.GetComponent<CardSlot>().GetDamage())
                         {
-                            Destroy(t.GetChild(0).gameObject);
-                            t.GetComponent<CardSlot>().SetDamage(0);
+                            Destroy(neighbor.GetChild(0).gameObject);
+                            neighbor.GetComponent<CardSlot>().SetDamage(0);
+                            yield return new WaitForSeconds(1);
+                            damageOverlay.gameObject.SetActive(false);
+                        }
+                        else if (slotLogic.GetDamage() < neighbor.GetComponent<CardSlot>().GetDamage())
+                        {
+                            neighbor.GetChild(0).GetComponent<Card>().SetDamage(neighbor.GetComponent<CardSlot>().GetDamage() - slotLogic.GetDamage());
+                            neighbor.GetComponent<CardSlot>().SetDamage(neighbor.GetComponent<CardSlot>().GetDamage() - slotLogic.GetDamage());
+                            retaliators.Add(neighbor);
+                            yield return new WaitForSeconds(1);
+                            damageOverlay.gameObject.SetActive(false);
                         }
                     }
                 }
             }
             else
             {
-                if (t.GetComponent<CardSlot>().GetDamage() > 0)
+                if (neighbor.GetComponent<CardSlot>().GetDamage() > 0)
                 {
-                    if (t.GetComponent<CardSlot>().heldByPlayer)
+                    if (neighbor.GetComponent<CardSlot>().heldByPlayer)
                     {
-                        if (slotLogic.GetDamage() > t.GetComponent<CardSlot>().GetDamage())
+                        damageOverlay.gameObject.SetActive(true);
+                        damageOverlay.text = "-" + (slotLogic.GetDamage()).ToString();
+                        damageOverlay.transform.position = neighbor.transform.position;
+
+                        if (slotLogic.GetDamage() >= neighbor.GetComponent<CardSlot>().GetDamage())
                         {
-                            Destroy(t.GetChild(0).gameObject);
-                            t.GetComponent<CardSlot>().SetDamage(0);
+                            Destroy(neighbor.GetChild(0).gameObject);
+                            neighbor.GetComponent<CardSlot>().heldByPlayer = false;
+                            neighbor.GetComponent<CardSlot>().SetDamage(0);
+                            yield return new WaitForSeconds(1);
+                            damageOverlay.gameObject.SetActive(false);
                         }
-                        else
+                        else if (slotLogic.GetDamage() < neighbor.GetComponent<CardSlot>().GetDamage())
                         {
-                            Destroy(Slot.GetChild(0).gameObject);
-                            slotLogic.SetDamage(0);
+                            neighbor.GetChild(0).GetComponent<Card>().SetDamage(neighbor.GetComponent<CardSlot>().GetDamage() - slotLogic.GetDamage());
+                            neighbor.GetComponent<CardSlot>().SetDamage(neighbor.GetComponent<CardSlot>().GetDamage() - slotLogic.GetDamage());
+
+                            Debug.Log(neighbor.GetComponent<CardSlot>().GetDamage());
+
+                            retaliators.Add(neighbor);
+                            yield return new WaitForSeconds(1);
+                            damageOverlay.gameObject.SetActive(false);
                         }
                     }
                 }
             }
         }
+        yield return new WaitForSeconds(2);
+
+        Debug.Log(retaliators.Count + " retaliators");
+
+        foreach(Transform retaliator in retaliators)
+        {
+            damageOverlay.gameObject.SetActive(true);
+            damageOverlay.text = "-" + retaliator.GetComponent<CardSlot>().GetDamage().ToString();
+            damageOverlay.transform.position = Slot.position;
+
+            slotLogic.transform.GetChild(0).GetComponent<Card>().SetDamage(slotLogic.GetDamage() - retaliator.GetComponent<CardSlot>().GetDamage());
+            slotLogic.SetDamage(slotLogic.GetDamage() - retaliator.GetComponent<CardSlot>().GetDamage());
+
+            if (slotLogic.GetDamage() <= 0)
+            {
+                Destroy(slotLogic.transform.GetChild(0).gameObject);
+                slotLogic.SetDamage(0);
+                slotLogic.heldByPlayer = false;
+            }
+
+            yield return new WaitForSeconds(1);
+            damageOverlay.gameObject.SetActive(false);
+        }
+
+        yield return new WaitForSeconds(1);
+
+        TurnManager.Instance().ChangeTurns();
     }
 }

@@ -27,6 +27,11 @@ public class CardPlacement : MonoBehaviour, IDragHandler, IEndDragHandler
         if (transform.parent.gameObject.tag == "PlayerHand")
         {
             isPlayerCard = true;
+            cardUI.color = Color.gray;
+        }
+        else
+        {
+            cardUI.color = Color.black;
         }
     }
 
@@ -81,8 +86,7 @@ public class CardPlacement : MonoBehaviour, IDragHandler, IEndDragHandler
                     placed = true;
                     TurnManager.Instance().rowAndColumnManager.CalculateCardScore(CardPlacementManager.Instance.CardSlot(), this);
                     CardPlacementManager.Instance.CardSlot().GetComponent<CardSlot>().heldByPlayer = true;
-                    DamageManager.instance.DealDamage(CardPlacementManager.Instance.CardSlot());
-                    TurnManager.Instance().ChangeTurns();
+                    StartCoroutine(DamageManager.instance.DealDamage(CardPlacementManager.Instance.CardSlot()));
                 }
                 else
                 {
