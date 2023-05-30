@@ -10,6 +10,9 @@ public class DamageManager : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI damageOverlay;
 
+    [SerializeField] private Transform playerGraveYard;
+    [SerializeField] private Transform enemyGraveYard;
+
     private void Awake()
     {
         instance = this;
@@ -61,7 +64,9 @@ public class DamageManager : MonoBehaviour
 
                         if (slotLogic.GetDamage() >= neighbor.GetComponent<CardSlot>().GetDamage())
                         {
-                            Destroy(neighbor.GetChild(0).gameObject);
+                            neighbor.GetChild(0).transform.position = enemyGraveYard.transform.position;
+                            neighbor.GetChild(0).transform.position = playerGraveYard.transform.position;
+                            neighbor.GetChild(0).SetParent(enemyGraveYard, true);
                             neighbor.GetComponent<CardSlot>().SetDamage(0);
                             yield return new WaitForSeconds(1);
                             damageOverlay.gameObject.SetActive(false);
@@ -89,7 +94,9 @@ public class DamageManager : MonoBehaviour
 
                         if (slotLogic.GetDamage() >= neighbor.GetComponent<CardSlot>().GetDamage())
                         {
-                            Destroy(neighbor.GetChild(0).gameObject);
+                            neighbor.GetChild(0).transform.position = playerGraveYard.transform.position;
+                            neighbor.transform.GetChild(0).GetComponent<Card>().dead = true;
+                            neighbor.GetChild(0).SetParent(playerGraveYard, true);
                             neighbor.GetComponent<CardSlot>().heldByPlayer = false;
                             neighbor.GetComponent<CardSlot>().SetDamage(0);
                             yield return new WaitForSeconds(1);
@@ -125,7 +132,15 @@ public class DamageManager : MonoBehaviour
 
             if (slotLogic.GetDamage() <= 0)
             {
-                Destroy(slotLogic.transform.GetChild(0).gameObject);
+                if (slotLogic.heldByPlayer)
+                {
+                    slotLogic.transform.position = playerGraveYard.transform.position;
+                }
+                else
+                {
+                    slotLogic.transform.position = enemyGraveYard.position;
+                }
+                slotLogic.transform.GetChild(0).GetComponent<Card>().dead = true;
                 slotLogic.SetDamage(0);
                 slotLogic.heldByPlayer = false;
             }

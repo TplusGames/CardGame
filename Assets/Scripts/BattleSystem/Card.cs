@@ -15,6 +15,8 @@ public class Card : MonoBehaviour
 
     private int damage;
 
+    public bool dead;
+
     private void Start()
     {
         shortDamage = Random.Range(50, 150);
